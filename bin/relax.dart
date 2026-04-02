@@ -1,5 +1,9 @@
-import 'package:relax/relax.dart' as relax;
+import 'dart:io';
 
-void main(List<String> arguments) {
-  print('Hello world: ${relax.calculate()}!');
+import 'package:relax_cli/src/cli_runner.dart';
+
+Future<void> main(List<String> args) async {
+  final exitCode = await RelaxCommandRunner().run(args);
+  await stdout.flush();
+  exit(exitCode);
 }
