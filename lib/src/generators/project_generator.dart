@@ -29,6 +29,8 @@ class ProjectGenerator {
     String primaryColor = '6750A4',
     String fontFamily = 'Roboto',
   }) async {
+    final projectDir = Directory(p.join(outputDirectory.path, projectName));
+
     // Step 1: scaffold with flutter create
     await _flutterCreate(
       projectName: projectName,
@@ -36,7 +38,15 @@ class ProjectGenerator {
       outputDirectory: outputDirectory,
     );
 
-    // Step 2: overlay architecture template
+    // Step 2: write .env files + run env_builder BEFORE mason templates.
+    // This ensures packages/env/ exists before pubspec.yaml references it,
+    // preventing VS Code from failing on `flutter pub get`.
+    await _generateEnvPackage(
+      projectDir: projectDir,
+      projectName: projectName,
+    );
+
+    // Step 3: overlay architecture template (pubspec.yaml with env: path: packages/env)
     final files = switch (architecture) {
       Architecture.bloc => BlocAppTemplate.files,
       Architecture.provider => ProviderAppTemplate.files,
@@ -53,7 +63,7 @@ class ProjectGenerator {
 
     final target = DirectoryGeneratorTarget(outputDirectory);
 
-    final generatedFiles = await generator.generate(
+    return generator.generate(
       target,
       vars: <String, dynamic>{
         'project_name': projectName,
@@ -64,13 +74,6 @@ class ProjectGenerator {
       fileConflictResolution: FileConflictResolution.overwrite,
       logger: _logger,
     );
-
-    // Step 3: run env_builder to generate packages/env from .env files
-    await _runEnvBuilder(
-      projectDir: Directory(p.join(outputDirectory.path, projectName)),
-    );
-
-    return generatedFiles;
   }
 
   /// Runs `flutter create` to generate platform directories.
@@ -133,8 +136,38 @@ class ProjectGenerator {
     }
   }
 
-  /// Runs `env_builder build` to generate `packages/env/` from `.env.*` files.
-  Future<void> _runEnvBuilder({required Directory projectDir}) async {
+  /// Writes `.env.*` files and runs `env_builder build` to create
+  /// `packages/env/` BEFORE the pubspec.yaml references it.
+  Future<void> _generateEnvPackage({
+    required Directory projectDir,
+    required String projectName,
+  }) async {
+    final displayName = projectName
+        .split('_')
+        .map((w) => w[0].toUpperCase() + w.substring(1))
+        .join(' ');
+
+    // Write .env files directly (no mason — we need them before templates)
+    final envFiles = {
+      '.env.development':
+          'APP_NAME=$displayName Dev\nAPP_SUFFIX=.dev\nBASE_URL=http://localhost:8080\n',
+      '.env.staging':
+          'APP_NAME=$displayName Stg\nAPP_SUFFIX=.stg\nBASE_URL=https://staging.api.example.com\n',
+      '.env.production':
+          'APP_NAME=$displayName\nAPP_SUFFIX=\nBASE_URL=https://api.example.com\n',
+    };
+
+    for (final entry in envFiles.entries) {
+      File(p.join(projectDir.path, entry.key))
+          .writeAsStringSync(entry.value);
+    }
+
+    // Also write a minimal pubspec.yaml so env_builder finds a root project
+    File(p.join(projectDir.path, 'pubspec.yaml')).writeAsStringSync(
+      'name: $projectName\ndescription: temp\nenvironment:\n  sdk: ^3.6.0\n',
+    );
+
+    // Run env_builder build
     final progress = _logger.progress('Running env_builder build');
 
     try {
@@ -160,76 +193,175 @@ class ProjectGenerator {
       _logger.warn(
         'Install env_builder_cli to generate the env package:\n'
         '  dart pub global activate env_builder_cli\n'
-        '  cd ${projectDir.path} && env_builder build '
+        '  cd ${p.basename(projectDir.path)} && env_builder build '
         '-e .env.development,.env.production,.env.staging',
       );
     }
   }
 
-  /// Patches `android/app/build.gradle.kts` to add productFlavors.
+  /// Configures Android: build.gradle.kts, AndroidManifest.xml, flavor res dirs.
   Future<void> _patchAndroidFlavors({
     required Directory projectDir,
     required String projectName,
   }) async {
-    final buildGradle = File(
-      p.join(projectDir.path, 'android', 'app', 'build.gradle.kts'),
-    );
+    final androidAppDir = p.join(projectDir.path, 'android', 'app');
+    final buildGradle = File(p.join(androidAppDir, 'build.gradle.kts'));
     if (!buildGradle.existsSync()) return;
 
-    var content = buildGradle.readAsStringSync();
-
-    // Don't patch if already has flavors
-    if (content.contains('productFlavors')) return;
-
-    // Convert snake_case to Title Case for display names
     final displayName = projectName
         .split('_')
         .map((w) => w[0].toUpperCase() + w.substring(1))
         .join(' ');
 
-    final flavorBlock = '''
+    // ── 1. Rewrite build.gradle.kts ─────────────────────────────
+    buildGradle.writeAsStringSync(_buildGradleContent(
+      namespace: 'com.example.$projectName',
+      applicationId: 'com.example.$projectName',
+      displayName: displayName,
+    ));
+
+    // ── 2. Patch AndroidManifest.xml ────────────────────────────
+    final manifest = File(
+      p.join(androidAppDir, 'src', 'main', 'AndroidManifest.xml'),
+    );
+    if (manifest.existsSync()) {
+      var xml = manifest.readAsStringSync();
+      // Replace android:label="..." with android:label="${appName}"
+      xml = xml.replaceAll(
+        RegExp(r'android:label="[^"]*"'),
+        r'android:label="${appName}"',
+      );
+      manifest.writeAsStringSync(xml);
+    }
+
+    // ── 3. Create flavor res directories ────────────────────────
+    for (final flavor in ['development', 'staging']) {
+      final resDir = Directory(
+        p.join(androidAppDir, 'src', flavor, 'res', 'values'),
+      );
+      resDir.createSync(recursive: true);
+
+      // Each flavor can override strings, icons, etc.
+      File(p.join(resDir.path, 'strings.xml')).writeAsStringSync(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<resources>\n'
+        '    <!-- Flavor-specific overrides go here -->\n'
+        '</resources>\n',
+      );
+    }
+
+    _logger.detail('Configured Android flavors, manifest, and res dirs');
+  }
+
+  /// Returns the complete `build.gradle.kts` content.
+  static String _buildGradleContent({
+    required String namespace,
+    required String applicationId,
+    required String displayName,
+  }) => '''
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("dev.flutter.flutter-gradle-plugin")
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace = "$namespace"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    signingConfigs {
+        if (System.getenv("ANDROID_KEYSTORE_PATH")) {
+            release {
+                storeFile file(System.getenv("ANDROID_KEYSTORE_PATH"))
+                keyAlias System.getenv("ANDROID_KEYSTORE_ALIAS")
+                keyPassword System.getenv("ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD")
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            }
+        } else {
+            release {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId = "$applicationId"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutterVersionCode.toInteger()
+        versionName = flutterVersionName
+    }
+
+    buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+
+        release {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
 
     flavorDimensions += "default"
     productFlavors {
         create("development") {
             dimension = "default"
             applicationIdSuffix = ".dev"
-            resValue("string", "app_name", "$displayName Dev")
+            manifestPlaceholders["appName"] = "$displayName [Dev]"
         }
         create("staging") {
             dimension = "default"
             applicationIdSuffix = ".stg"
-            resValue("string", "app_name", "$displayName Stg")
+            manifestPlaceholders["appName"] = "$displayName [Stg]"
         }
         create("production") {
             dimension = "default"
-            resValue("string", "app_name", "$displayName")
+            applicationIdSuffix = ""
+            manifestPlaceholders["appName"] = "$displayName"
         }
-    }''';
-
-    // Find the buildTypes closing brace and insert after it
-    final buildTypesEnd = content.indexOf(RegExp(r'buildTypes\s*\{'));
-    if (buildTypesEnd == -1) return;
-
-    // Find the matching closing brace of buildTypes
-    var depth = 0;
-    var insertIndex = -1;
-    for (var i = content.indexOf('{', buildTypesEnd); i < content.length; i++) {
-      if (content[i] == '{') depth++;
-      if (content[i] == '}') depth--;
-      if (depth == 0) {
-        insertIndex = i + 1;
-        break;
-      }
     }
+}
 
-    if (insertIndex == -1) return;
-
-    content = '${content.substring(0, insertIndex)}'
-        '$flavorBlock'
-        '${content.substring(insertIndex)}';
-
-    buildGradle.writeAsStringSync(content);
-    _logger.detail('Patched Android build.gradle.kts with flavor config');
-  }
+flutter {
+    source = "../.."
+}
+''';
 }
