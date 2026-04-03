@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:mason_logger/mason_logger.dart';
-import 'package:relax_cli/relax.dart';
+import 'package:relax_cli/relax_cli.dart';
 import 'package:test/test.dart';
 
 void main() {

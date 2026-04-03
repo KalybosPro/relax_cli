@@ -1,4 +1,4 @@
-import 'package:relax_cli/relax.dart';
+import 'package:relax_cli/relax_cli.dart';
 import 'package:test/test.dart';
 
 void main() {

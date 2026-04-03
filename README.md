@@ -53,6 +53,15 @@ relax generate module user -o core/domain  # custom output directory
 relax g module order                   # shorthand alias
 ```
 
+Modules are fully integrated with **RelaxORM**: the model is annotated with `@RelaxTable()`, the data source uses `Collection<T>` for typed CRUD + reactive streams, and `build_runner` is launched automatically to generate the schema.
+
+### `relax generate model` — Add a standalone ORM model
+
+```bash
+relax generate model user_profile      # generates in lib/models/
+relax g model payment -o core/models   # custom output directory
+```
+
 ### `relax doctor` — Check your environment
 
 ```bash
@@ -134,12 +143,14 @@ relax g module product
 ```
 lib/modules/product/
 ├── product.dart                         # barrel
-├── models/product.dart                  # immutable model
+├── models/
+│   ├── product.dart                     # @RelaxTable model
+│   └── product.g.dart                   # generated schema (auto)
 ├── repositories/
 │   ├── product_repository.dart          # abstract interface
 │   └── product_repository_impl.dart     # implementation
 └── data_sources/
-    └── product_data_source.dart         # data access layer
+    └── product_data_source.dart         # RelaxORM Collection<T>
 ```
 
 ## What you get out of the box
@@ -148,7 +159,9 @@ lib/modules/product/
 - **Feature-based** architecture with barrel files
 - **Sealed classes** for events and states (Dart 3+)
 - **Clean Architecture** modules with repository pattern
+- **RelaxORM** integration with typed CRUD, reactive streams, and auto-generated schemas
 - **Auto-detection** of your project's architecture for `generate feature`
+- **Automatic code generation** — `build_runner` runs after module/model creation
 - Ready-to-run project with a Home feature example
 
 ## Development

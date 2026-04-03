@@ -6,6 +6,7 @@ import '../templates/model_template.dart';
 
 /// Generates a RelaxORM model class inside an existing Flutter project.
 class ModelGenerator {
+  /// Creates a [ModelGenerator] with the given [logger].
   const ModelGenerator({required Logger logger}) : _logger = logger;
 
   final Logger _logger;

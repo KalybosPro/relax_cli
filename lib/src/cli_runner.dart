@@ -6,6 +6,9 @@ import 'version.dart';
 
 /// The command runner for the relax CLI.
 class RelaxCommandRunner extends CommandRunner<int> {
+  /// Creates the relax CLI command runner.
+  ///
+  /// If no [logger] is provided, a default [Logger] is used.
   RelaxCommandRunner({Logger? logger})
       : _logger = logger ?? Logger(),
         super(

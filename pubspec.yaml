@@ -18,6 +18,8 @@ platforms:
   windows:
   macos:
   linux:
+  android:
+  ios:
 
 environment:
   sdk: ^3.11.0

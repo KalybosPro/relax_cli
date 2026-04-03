@@ -6,6 +6,7 @@ import '../templates/module_template.dart';
 
 /// Generates a domain/data module inside an existing Flutter project.
 class ModuleGenerator {
+  /// Creates a [ModuleGenerator] with the given [logger].
   const ModuleGenerator({required Logger logger}) : _logger = logger;
 
   final Logger _logger;
