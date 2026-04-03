@@ -40,6 +40,7 @@ dependencies:
     sdk: flutter
   provider: ^6.1.0
   get_it: ^8.0.3
+  relax_orm: ^0.1.1
   env:
     path: packages/env
 
@@ -47,6 +48,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  build_runner: ^2.4.0
+  relax_orm_generator: ^0.1.2
 
 flutter:
   uses-material-design: true

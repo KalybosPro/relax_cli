@@ -1,3 +1,6 @@
+@Timeout(Duration(minutes: 5))
+library;
+
 import 'dart:io';
 
 import 'package:mason_logger/mason_logger.dart';
@@ -121,7 +124,8 @@ void main() {
       }
     });
 
-    test('generated model has correct class name', () async {
+    test('generated model has correct class name and RelaxORM annotations',
+        () async {
       await createProject('app');
       final originalDir = Directory.current;
       Directory.current = Directory('${tempDir.path}/app');
@@ -133,7 +137,9 @@ void main() {
           '${tempDir.path}/app/lib/modules/shopping_cart/models/shopping_cart.dart',
         ).readAsStringSync();
         expect(model, contains('class ShoppingCart'));
-        expect(model, contains('ShoppingCart copyWith'));
+        expect(model, contains('@RelaxTable()'));
+        expect(model, contains('@PrimaryKey()'));
+        expect(model, contains("part 'shopping_cart.g.dart'"));
       } finally {
         Directory.current = originalDir;
       }

@@ -1,7 +1,23 @@
 name: relax_cli
-description: A CLI tool to generate Flutter projects with clean architecture.
+description: >-
+  A CLI tool to generate Flutter projects with clean architecture,
+  multiple state management options (Bloc, Provider, Riverpod, GetX),
+  and RelaxORM integration for local-first data persistence.
 version: 0.1.0
 repository: https://github.com/KalybosPro/relax_cli
+issue_tracker: https://github.com/KalybosPro/relax_cli/issues
+
+topics:
+  - cli
+  - flutter
+  - code-generation
+  - clean-architecture
+  - orm
+
+platforms:
+  windows:
+  macos:
+  linux:
 
 environment:
   sdk: ^3.11.0

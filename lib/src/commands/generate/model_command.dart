@@ -4,40 +4,43 @@ import 'dart:io';
 import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-import '../../generators/module_generator.dart';
+import '../../generators/model_generator.dart';
 
-/// Generates a new domain/data module in the current Flutter project.
-class ModuleCommand extends Command<int> {
-  ModuleCommand({required Logger logger}) : _logger = logger {
+/// Generates a new RelaxORM model in the current Flutter project.
+///
+/// Usage: `relax generate model user_profile`
+/// Alias: `relax g model user_profile`
+class ModelCommand extends Command<int> {
+  ModelCommand({required Logger logger}) : _logger = logger {
     argParser.addOption(
       'output',
       abbr: 'o',
-      help: 'Output directory relative to lib/ (default: modules).',
-      defaultsTo: 'modules',
+      help: 'Output directory relative to lib/ (default: models).',
+      defaultsTo: 'models',
     );
   }
 
   final Logger _logger;
 
   @override
-  String get name => 'module';
+  String get name => 'model';
 
   @override
   String get description =>
-      'Generate a domain/data module (model, repository, data source).';
+      'Generate a RelaxORM model class with @RelaxTable annotation.';
 
   @override
-  String get invocation => 'relax generate module <module_name>';
+  String get invocation => 'relax generate model <model_name>';
 
   @override
   Future<int> run() async {
-    final moduleName = _getModuleName();
-    if (moduleName == null) return ExitCode.usage.code;
+    final modelName = _getModelName();
+    if (modelName == null) return ExitCode.usage.code;
 
-    if (!_isValidName(moduleName)) {
-      _logger.err('Invalid module name: "$moduleName"');
+    if (!_isValidName(modelName)) {
+      _logger.err('Invalid model name: "$modelName"');
       _logger.info(
-        'Module name must be lowercase letters, digits, underscores; '
+        'Model name must be lowercase letters, digits, underscores; '
         'must start with a letter.',
       );
       return ExitCode.usage.code;
@@ -52,32 +55,32 @@ class ModuleCommand extends Command<int> {
 
     final outputDirName = argResults?['output'] as String;
     final outputDir = Directory('${libDir.path}/$outputDirName');
-    final moduleDir = Directory('${outputDir.path}/$moduleName');
+    final modelFile = File('${outputDir.path}/$modelName.dart');
 
-    if (moduleDir.existsSync()) {
-      _logger.err('Module "$moduleName" already exists in $outputDirName/.');
+    if (modelFile.existsSync()) {
+      _logger.err('Model "$modelName" already exists in $outputDirName/.');
       return ExitCode.usage.code;
     }
 
     _logger.info('');
     _logger.info(
-      'Generating module ${lightCyan.wrap(moduleName)} '
+      'Generating model ${lightCyan.wrap(modelName)} '
       'in ${lightCyan.wrap('lib/$outputDirName/')}...',
     );
     _logger.info('');
 
-    final generator = ModuleGenerator(logger: _logger);
+    final generator = ModelGenerator(logger: _logger);
 
     try {
       final generatedFiles = await generator.generate(
-        moduleName: moduleName,
+        modelName: modelName,
         outputDir: outputDir,
       );
 
       _logger.info('');
       _logger.success(
-        'Generated module "$moduleName" '
-        '(${generatedFiles.length} files).',
+        'Generated model "$modelName" '
+        '(${generatedFiles.length} file).',
       );
       _logger.info('');
 
@@ -123,10 +126,10 @@ class ModuleCommand extends Command<int> {
     }
   }
 
-  String? _getModuleName() {
+  String? _getModelName() {
     final args = argResults!.rest;
     if (args.isEmpty) {
-      _logger.err('No module name specified.');
+      _logger.err('No model name specified.');
       _logger.info('Usage: $invocation');
       return null;
     }

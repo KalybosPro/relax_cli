@@ -43,41 +43,27 @@ export 'data_sources/{{module_name.snakeCase()}}_data_source.dart';
 ''';
 
   static const _model = '''
-import 'package:flutter/foundation.dart';
+import 'package:relax_orm/relax_orm.dart';
 
-@immutable
+part '{{module_name.snakeCase()}}.g.dart';
+
+@RelaxTable()
 class {{module_name.pascalCase()}} {
-  const {{module_name.pascalCase()}}({
-    required this.id,
-    required this.name,
-  });
-
+  @PrimaryKey()
   final String id;
+
   final String name;
 
-  {{module_name.pascalCase()}} copyWith({
-    String? id,
-    String? name,
-  }) {
-    return {{module_name.pascalCase()}}(
-      id: id ?? this.id,
-      name: name ?? this.name,
-    );
-  }
+  final DateTime createdAt;
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is {{module_name.pascalCase()}} &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          name == other.name;
+  final DateTime updatedAt;
 
-  @override
-  int get hashCode => id.hashCode ^ name.hashCode;
-
-  @override
-  String toString() => '{{module_name.pascalCase()}}(id: \$id, name: \$name)';
+  {{module_name.pascalCase()}}({
+    required this.id,
+    required this.name,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 }
 ''';
 
@@ -94,7 +80,11 @@ abstract interface class {{module_name.pascalCase()}}Repository {
 
   Future<void> update({{module_name.pascalCase()}} item);
 
+  Future<void> upsert({{module_name.pascalCase()}} item);
+
   Future<void> delete(String id);
+
+  Stream<List<{{module_name.pascalCase()}}>> watchAll();
 }
 ''';
 
@@ -127,38 +117,48 @@ class {{module_name.pascalCase()}}RepositoryImpl
       _dataSource.update(item);
 
   @override
+  Future<void> upsert({{module_name.pascalCase()}} item) =>
+      _dataSource.upsert(item);
+
+  @override
   Future<void> delete(String id) => _dataSource.delete(id);
+
+  @override
+  Stream<List<{{module_name.pascalCase()}}>> watchAll() =>
+      _dataSource.watchAll();
 }
 ''';
 
   static const _dataSource = '''
+import 'package:relax_orm/relax_orm.dart';
+
 import '../models/{{module_name.snakeCase()}}.dart';
 
-/// Data source for [{{module_name.pascalCase()}}] entities.
-///
-/// Replace this in-memory implementation with your actual
-/// data source (API, database, etc.).
+/// Data source for [{{module_name.pascalCase()}}] backed by RelaxORM.
 class {{module_name.pascalCase()}}DataSource {
-  final List<{{module_name.pascalCase()}}> _items = [];
+  {{module_name.pascalCase()}}DataSource({required RelaxDB db})
+      : _collection = db.collection<{{module_name.pascalCase()}}>({{module_name.camelCase()}}Schema);
 
-  Future<List<{{module_name.pascalCase()}}>> getAll() async => List.unmodifiable(_items);
+  final Collection<{{module_name.pascalCase()}}> _collection;
 
-  Future<{{module_name.pascalCase()}}?> getById(String id) async {
-    return _items.where((item) => item.id == id).firstOrNull;
-  }
+  Future<List<{{module_name.pascalCase()}}>> getAll() => _collection.getAll();
 
-  Future<void> create({{module_name.pascalCase()}} item) async {
-    _items.add(item);
-  }
+  Future<{{module_name.pascalCase()}}?> getById(String id) =>
+      _collection.get(id);
 
-  Future<void> update({{module_name.pascalCase()}} item) async {
-    final index = _items.indexWhere((i) => i.id == item.id);
-    if (index != -1) _items[index] = item;
-  }
+  Future<void> create({{module_name.pascalCase()}} item) =>
+      _collection.add(item);
 
-  Future<void> delete(String id) async {
-    _items.removeWhere((item) => item.id == id);
-  }
+  Future<void> update({{module_name.pascalCase()}} item) =>
+      _collection.update(item);
+
+  Future<void> upsert({{module_name.pascalCase()}} item) =>
+      _collection.upsert(item);
+
+  Future<void> delete(String id) => _collection.delete(id);
+
+  Stream<List<{{module_name.pascalCase()}}>> watchAll() =>
+      _collection.watchAll();
 }
 ''';
 }
