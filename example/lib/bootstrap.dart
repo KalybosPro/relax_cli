@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/di.dart' as di;
+import 'i18n/slang/translations.g.dart';
 
 class AppBlocObserver extends BlocObserver {
   const AppBlocObserver();
@@ -35,6 +36,7 @@ Future<void> bootstrap(
 
   runZonedGuarded(() {
     WidgetsFlutterBinding.ensureInitialized();
+    LocaleSettings.useDeviceLocale();
 
     di.setUpRegister(env);
 

@@ -40,6 +40,8 @@ dependencies:
     sdk: flutter
   flutter_riverpod: ^2.6.0
   get_it: ^8.0.3
+  slang: ^4.14.0
+  slang_flutter: ^4.14.0
   relax_orm: ^0.1.1
   env:
     path: packages/env
@@ -67,12 +69,19 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '{{project_name.titleCase()}}',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      home: const HomePage(),
+    return TranslationProvider(
+      child: Builder(
+        builder: (context) => MaterialApp(
+          title: t.appName,
+          debugShowCheckedModeBanner: false,
+          locale: TranslationProvider.of(context).flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          home: const HomePage(),
+        ),
+      ),
     );
   }
 }
@@ -151,6 +160,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/core.dart';
 import '../models/home_state.dart';
 import '../providers/home_provider.dart';
 

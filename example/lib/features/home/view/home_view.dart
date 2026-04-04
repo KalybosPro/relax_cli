@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/core.dart';
 import '../bloc/home_bloc.dart';
 
 class HomeView extends StatelessWidget {
@@ -34,12 +35,12 @@ class HomeView extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Welcome!',
+                      t.home.welcome,
                       style: theme.textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Your Bloc project is ready.',
+                      t.home.subtitle,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

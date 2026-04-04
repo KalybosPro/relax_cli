@@ -63,7 +63,7 @@ class ProjectGenerator {
 
     final target = DirectoryGeneratorTarget(outputDirectory);
 
-    return generator.generate(
+    final generatedFiles = await generator.generate(
       target,
       vars: <String, dynamic>{
         'project_name': projectName,
@@ -74,6 +74,11 @@ class ProjectGenerator {
       fileConflictResolution: FileConflictResolution.overwrite,
       logger: _logger,
     );
+
+    // Step 4: run flutter pub get + build_runner to generate slang translations
+    await _runBuildRunner(projectDir: projectDir);
+
+    return generatedFiles;
   }
 
   /// Runs `flutter create` to generate platform directories.
@@ -122,6 +127,11 @@ class ProjectGenerator {
         await _patchAndroidFlavors(
           projectDir: Directory(p.join(outputDirectory.path, projectName)),
           projectName: projectName,
+        );
+
+        // Patch iOS Info.plist with supported locales
+        _patchIosLocalizations(
+          projectDir: Directory(p.join(outputDirectory.path, projectName)),
         );
       } else {
         progress.fail('flutter create exited with code ${result.exitCode}');
@@ -197,6 +207,107 @@ class ProjectGenerator {
         '-e .env.development,.env.production,.env.staging',
       );
     }
+  }
+
+  /// Runs `flutter pub get` then `build_runner build` to generate slang
+  /// translations and any other generated code.
+  Future<void> _runBuildRunner({required Directory projectDir}) async {
+    // pub get first so build_runner can resolve packages
+    final pubGetProgress = _logger.progress('Running flutter pub get');
+    try {
+      final pubGet = await Process.run(
+        'flutter',
+        ['pub', 'get'],
+        workingDirectory: projectDir.path,
+        runInShell: true,
+      );
+      if (pubGet.exitCode == 0) {
+        pubGetProgress.complete('Dependencies resolved');
+      } else {
+        pubGetProgress.fail('flutter pub get exited with code ${pubGet.exitCode}');
+        _logger.detail('${pubGet.stderr}'.trim());
+        return;
+      }
+    } on ProcessException {
+      pubGetProgress.fail('Flutter not found — skipping pub get');
+      return;
+    }
+
+    // Generate slang translations
+    final slangProgress = _logger.progress('Running slang (i18n)');
+    try {
+      final slangResult = await Process.run(
+        'dart',
+        ['run', 'slang'],
+        workingDirectory: projectDir.path,
+        runInShell: true,
+      );
+      if (slangResult.exitCode == 0) {
+        slangProgress.complete('Translations generated');
+      } else {
+        slangProgress.fail('slang exited with code ${slangResult.exitCode}');
+        _logger.detail('${slangResult.stderr}'.trim());
+      }
+    } on ProcessException {
+      slangProgress.fail('slang not found — skipping translation generation');
+      _logger.warn(
+        'Run manually:\n'
+        '  cd ${p.basename(projectDir.path)} && dart run slang',
+      );
+    }
+
+    // Generate other code (RelaxORM, etc.)
+    final progress = _logger.progress('Running build_runner');
+    try {
+      final result = await Process.run(
+        'dart',
+        ['run', 'build_runner', 'build', '--delete-conflicting-outputs'],
+        workingDirectory: projectDir.path,
+        runInShell: true,
+      );
+      if (result.exitCode == 0) {
+        progress.complete('Code generation complete');
+      } else {
+        progress.fail('build_runner exited with code ${result.exitCode}');
+        _logger.detail('${result.stderr}'.trim());
+      }
+    } on ProcessException {
+      progress.fail('build_runner not found — skipping code generation');
+      _logger.warn(
+        'Run manually:\n'
+        '  cd ${p.basename(projectDir.path)} && dart run build_runner build '
+        '--delete-conflicting-outputs',
+      );
+    }
+  }
+
+  /// Patches iOS Info.plist to declare supported localizations (fr, en).
+  void _patchIosLocalizations({required Directory projectDir}) {
+    final infoPlist = File(
+      p.join(projectDir.path, 'ios', 'Runner', 'Info.plist'),
+    );
+    if (!infoPlist.existsSync()) return;
+
+    var content = infoPlist.readAsStringSync();
+
+    // Only add if not already present
+    if (content.contains('CFBundleLocalizations')) return;
+
+    // Insert before the closing </dict>
+    const localizationBlock = '''
+\t<key>CFBundleLocalizations</key>
+\t<array>
+\t\t<string>fr</string>
+\t\t<string>en</string>
+\t</array>''';
+
+    content = content.replaceFirst(
+      '</dict>\n</plist>',
+      '$localizationBlock\n</dict>\n</plist>',
+    );
+    infoPlist.writeAsStringSync(content);
+
+    _logger.detail('Configured iOS localizations (fr, en)');
   }
 
   /// Configures Android: build.gradle.kts, AndroidManifest.xml, flavor res dirs.
@@ -328,6 +439,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
+        resConfigs "fr", "en"
     }
 
     buildTypes {

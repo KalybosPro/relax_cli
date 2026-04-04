@@ -8,12 +8,19 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Example',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      home: const HomePage(),
+    return TranslationProvider(
+      child: Builder(
+        builder: (context) => MaterialApp(
+          title: t.appName,
+          debugShowCheckedModeBanner: false,
+          locale: TranslationProvider.of(context).flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          home: const HomePage(),
+        ),
+      ),
     );
   }
 }

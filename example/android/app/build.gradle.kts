@@ -67,6 +67,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
+        resConfigs "fr", "en"
     }
 
     buildTypes {

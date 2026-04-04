@@ -12,6 +12,8 @@ dependencies:
   flutter_bloc: ^9.1.0
   equatable: ^2.0.7
   get_it: ^8.0.3
+  slang: ^4.14.0
+  slang_flutter: ^4.14.0
   relax_orm: ^0.1.1
   env:
     path: packages/env

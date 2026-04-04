@@ -106,7 +106,6 @@ class CreateCommand extends Command<int> {
       _logger.info('');
       _logger.info('Next steps:');
       _logger.info('  ${lightCyan.wrap('cd $projectName')}');
-      _logger.info('  ${lightCyan.wrap('flutter pub get')}');
       _logger.info('');
       _logger.info('Run a flavor:');
       _logger.info(
@@ -117,6 +116,11 @@ class CreateCommand extends Command<int> {
       );
       _logger.info(
         '  ${lightCyan.wrap('flutter run --flavor production -t lib/main_production.dart')}',
+      );
+      _logger.info('');
+      _logger.info('Regenerate translations after editing .i18n.json files:');
+      _logger.info(
+        '  ${lightCyan.wrap('dart run build_runner build --delete-conflicting-outputs')}',
       );
       _logger.info('');
 
