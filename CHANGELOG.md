@@ -1,3 +1,11 @@
+## 0.1.2
+
+- **Fixed** generated `build.gradle.kts` failing to compile with Kotlin DSL errors.
+  - Replaced Groovy syntax (`def`, `new Properties()`, single-quoted strings, `withReader`, `toInteger()`) with valid Kotlin DSL (`val`, `Properties()`, double-quoted strings, `.reader().use {}`, `.toInt()`).
+  - Fixed deprecated `kotlinOptions` → `kotlin { compilerOptions {} }` block.
+  - Fixed `Unresolved reference: it` in signing config by using explicit named lambda parameter.
+  - Added required `import java.util.Properties` and `import java.io.FileInputStream`.
+
 ## 0.1.1
 
 - Added built-in internationalization (i18n) support via **slang**.
