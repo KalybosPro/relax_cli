@@ -1,3 +1,15 @@
+## 0.1.1
+
+- Added built-in internationalization (i18n) support via **slang**.
+  - Projects are scaffolded with `fr` (base) and `en` locale JSON files.
+  - `build.yaml` is generated with slang configuration.
+  - Translations are auto-generated after `relax create` via `dart run slang` + `build_runner`.
+- Automatic `flutter pub get` and code generation run at the end of `relax create`.
+- Patched iOS `Info.plist` with supported locales during project creation.
+- Improved generated `README.md` with flavor run commands and translation regeneration instructions.
+- Removed sample `product` and `user` modules from the example project.
+- Removed redundant `flutter pub get` from post-create instructions (now runs automatically).
+
 ## 0.1.0
 
 - Initial release.
