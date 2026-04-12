@@ -11,5 +11,10 @@ example/windows/
 example/web/
 example/packages/
 
+# Environment files should remain in repo for local example use, but not in published package
+example/.env.development
+example/.env.production
+example/.env.staging
+
 # Build artifacts
 pubspec.lock
