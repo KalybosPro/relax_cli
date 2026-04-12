@@ -49,6 +49,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
   flutter_lints: ^5.0.0
   build_runner: ^2.4.0
   relax_orm_generator: ^0.1.2
@@ -60,6 +63,7 @@ flutter:
   static const _appView = '''
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../../core/core.dart';
 import '../../features/home/home.dart';
@@ -144,7 +148,7 @@ class HomePage extends StatelessWidget {
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../core/core.dart';
+import '../../../core/core.dart';
 import '../controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {

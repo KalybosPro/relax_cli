@@ -38,6 +38,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
   provider: ^6.1.0
   get_it: ^8.0.3
   slang: ^4.14.0
@@ -60,6 +63,7 @@ flutter:
   static const _appView = '''
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../../core/core.dart';
 import '../../features/home/home.dart';
@@ -151,7 +155,7 @@ class HomePage extends StatelessWidget {
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/core.dart';
+import '../../../core/core.dart';
 import '../models/home_state.dart';
 import '../notifiers/home_notifier.dart';
 

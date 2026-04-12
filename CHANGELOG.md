@@ -1,3 +1,10 @@
+## 0.1.3
+
+- **Fixed** generated Flutter app templates to include `flutter_localizations` and correct relative `core` imports for Bloc, GetX, Provider, and Riverpod starter projects.
+- **Fixed** generated widget test scaffolding by wrapping `const App()` inside `TranslationProvider` correctly.
+- **Improved** `relax create` output by adding `flutter pub get` to the next steps instructions.
+- **Removed** an incomplete stray generator file from the repository.
+
 ## 0.1.2
 
 - **Fixed** generated `build.gradle.kts` failing to compile with Kotlin DSL errors.

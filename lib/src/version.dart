@@ -1,2 +1,2 @@
 /// Current version of the relax CLI.
-const String version = '0.1.0';
+const String version = '0.1.3';

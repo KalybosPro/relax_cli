@@ -250,7 +250,7 @@ import 'package:{{project_name.snakeCase()}}/i18n/slang/translations.g.dart';
 void main() {
   testWidgets('App renders HomePage', (tester) async {
     LocaleSettings.setLocale(AppLocale.en);
-    await tester.pumpWidget(const TranslationProvider(child: App()));
+    await tester.pumpWidget(TranslationProvider(child: const App()));
     expect(find.text(t.appName), findsOneWidget);
   });
 }

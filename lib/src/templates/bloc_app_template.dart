@@ -44,6 +44,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
   flutter_bloc: ^9.1.0
   equatable: ^2.0.7
   get_it: ^8.0.3
@@ -68,6 +71,7 @@ flutter:
 
   static const _appView = '''
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../../core/core.dart';
 import '../../features/home/home.dart';
@@ -180,7 +184,7 @@ class HomePage extends StatelessWidget {
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../core/core.dart';
+import '../../../core/core.dart';
 import '../bloc/home_bloc.dart';
 
 class HomeView extends StatelessWidget {

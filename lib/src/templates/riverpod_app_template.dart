@@ -38,6 +38,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
   flutter_riverpod: ^2.6.0
   get_it: ^8.0.3
   slang: ^4.14.0
@@ -60,6 +63,7 @@ flutter:
 
   static const _appView = '''
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../../core/core.dart';
 import '../../features/home/home.dart';
@@ -160,7 +164,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/core.dart';
+import '../../../core/core.dart';
 import '../models/home_state.dart';
 import '../providers/home_provider.dart';
 
