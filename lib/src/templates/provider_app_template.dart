@@ -30,10 +30,10 @@ abstract final class ProviderAppTemplate {
 name: {{project_name.snakeCase()}}
 description: {{description}}
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.10.7
 
 dependencies:
   flutter:
@@ -45,7 +45,7 @@ dependencies:
   get_it: ^8.0.3
   slang: ^4.14.0
   slang_flutter: ^4.14.0
-  relax_orm: ^0.1.1
+  relax_orm: ^0.1.2
   env:
     path: packages/env
 

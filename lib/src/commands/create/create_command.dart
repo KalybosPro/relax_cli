@@ -20,6 +20,7 @@ class CreateCommand extends Command<int> {
           for (final arch in Architecture.values) arch.name: arch.label,
         },
       )
+      ..addFlag('org',abbr: 'o',help: '--org com.example')
       ..addOption(
         'description',
         abbr: 'd',

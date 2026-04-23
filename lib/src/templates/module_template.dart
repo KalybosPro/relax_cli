@@ -8,32 +8,29 @@ abstract final class ModuleTemplate {
   static String _p(String path) => '{{module_name.snakeCase()}}/$path';
 
   static List<TemplateFile> get files => [
-        TemplateFile(_p('{{module_name.snakeCase()}}.dart'), _barrel),
+    TemplateFile(_p('{{module_name.snakeCase()}}.dart'), _barrel),
 
-        // ── Models ──────────────────────────────────────────────
-        TemplateFile(
-          _p('models/{{module_name.snakeCase()}}.dart'),
-          _model,
-        ),
+    // ── Models ──────────────────────────────────────────────
+    TemplateFile(_p('models/{{module_name.snakeCase()}}.dart'), _model),
 
-        // ── Repository (abstract) ───────────────────────────────
-        TemplateFile(
-          _p('repositories/{{module_name.snakeCase()}}_repository.dart'),
-          _repository,
-        ),
+    // ── Repository (abstract) ───────────────────────────────
+    TemplateFile(
+      _p('repositories/{{module_name.snakeCase()}}_repository.dart'),
+      _repository,
+    ),
 
-        // ── Repository (implementation) ─────────────────────────
-        TemplateFile(
-          _p('repositories/{{module_name.snakeCase()}}_repository_impl.dart'),
-          _repositoryImpl,
-        ),
+    // ── Repository (implementation) ─────────────────────────
+    TemplateFile(
+      _p('repositories/{{module_name.snakeCase()}}_repository_impl.dart'),
+      _repositoryImpl,
+    ),
 
-        // ── Data source ─────────────────────────────────────────
-        TemplateFile(
-          _p('data_sources/{{module_name.snakeCase()}}_data_source.dart'),
-          _dataSource,
-        ),
-      ];
+    // ── Data source ─────────────────────────────────────────
+    TemplateFile(
+      _p('data_sources/{{module_name.snakeCase()}}_data_source.dart'),
+      _dataSource,
+    ),
+  ];
 
   static const _barrel = '''
 export 'models/{{module_name.snakeCase()}}.dart';
@@ -49,6 +46,14 @@ part '{{module_name.snakeCase()}}.g.dart';
 
 @RelaxTable()
 class {{module_name.pascalCase()}} {
+
+  const {{module_name.pascalCase()}}({
+    required this.id,
+    required this.name,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
   @PrimaryKey()
   final String id;
 
@@ -57,13 +62,6 @@ class {{module_name.pascalCase()}} {
   final DateTime createdAt;
 
   final DateTime updatedAt;
-
-  {{module_name.pascalCase()}}({
-    required this.id,
-    required this.name,
-    required this.createdAt,
-    required this.updatedAt,
-  });
 }
 ''';
 
@@ -137,7 +135,7 @@ import '../models/{{module_name.snakeCase()}}.dart';
 /// Data source for [{{module_name.pascalCase()}}] backed by RelaxORM.
 class {{module_name.pascalCase()}}DataSource {
   {{module_name.pascalCase()}}DataSource({required RelaxDB db})
-      : _collection = db.collection<{{module_name.pascalCase()}}>({{module_name.camelCase()}}Schema);
+      : _collection = db.collection<{{module_name.pascalCase()}}>();
 
   final Collection<{{module_name.pascalCase()}}> _collection;
 
