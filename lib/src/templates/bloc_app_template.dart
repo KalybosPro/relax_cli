@@ -85,7 +85,6 @@ dependencies:
   
   flutter_bloc: ^9.1.1
   bloc: ^9.2.0
-  bloc_test: ^10.0.0
   equatable: ^2.0.7
   get_it: ^8.0.3
   slang: ^4.14.0
