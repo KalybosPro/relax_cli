@@ -7,24 +7,25 @@ abstract final class SharedTemplate {
 
   /// Returns the common [TemplateFile] list (analysis_options, core/theme, env, i18n).
   static List<TemplateFile> coreFiles() => [
-        TemplateFile(p('analysis_options.yaml'), analysisOptions),
-        TemplateFile(p('lib/core/core.dart'), coreBarrel),
-        TemplateFile(p('lib/core/theme/app_theme.dart'), appTheme),
-        TemplateFile(p('lib/core/theme/app_colors.dart'), appColors),
-        TemplateFile(p('lib/core/theme/app_typography.dart'), appTypography),
-        // ── DI ──────────────────────────────────────────────────
-        TemplateFile(p('lib/core/di/di.dart'), diSetup),
-        // ── Env / Flavor ────────────────────────────────────────
-        TemplateFile(p('.env.development'), envDevelopment),
-        TemplateFile(p('.env.staging'), envStaging),
-        TemplateFile(p('.env.production'), envProduction),
-        // ── i18n (slang) ────────────────────────────────────────
-        TemplateFile(p('lib/i18n/fr.i18n.json'), i18nStringsFr),
-        TemplateFile(p('lib/i18n/en.i18n.json'), i18nStringsEn),
-        TemplateFile(p('build.yaml'), buildYaml),
-        // ── VS Code ─────────────────────────────────────────────
-        TemplateFile(p('.vscode/launch.json'), vscodeLaunchJson),
-      ];
+    TemplateFile(p('analysis_options.yaml'), analysisOptions),
+    TemplateFile(p('lib/core/core.dart'), coreBarrel),
+    TemplateFile(p('lib/core/theme/app_theme.dart'), appTheme),
+    TemplateFile(p('lib/core/theme/app_colors.dart'), appColors),
+    TemplateFile(p('lib/core/theme/app_typography.dart'), appTypography),
+    TemplateFile(p('lib/core/cache/cached_storage.dart'), cachedStorage),
+    // ── DI ──────────────────────────────────────────────────
+    TemplateFile(p('lib/core/di/di.dart'), diSetup),
+    // ── Env / Flavor ────────────────────────────────────────
+    TemplateFile(p('.env.development'), envDevelopment),
+    TemplateFile(p('.env.staging'), envStaging),
+    TemplateFile(p('.env.production'), envProduction),
+    // ── i18n (slang) ────────────────────────────────────────
+    TemplateFile(p('lib/i18n/fr.i18n.json'), i18nStringsFr),
+    TemplateFile(p('lib/i18n/en.i18n.json'), i18nStringsEn),
+    TemplateFile(p('build.yaml'), buildYaml),
+    // ── VS Code ─────────────────────────────────────────────
+    TemplateFile(p('.vscode/launch.json'), vscodeLaunchJson),
+  ];
 
   // ─── Analysis options ──────────────────────────────────────────
 
@@ -80,7 +81,8 @@ targets:
 
   // ─── README helper ─────────────────────────────────────────────
 
-  static String readme(String archName, String featureDir) => '''
+  static String readme(String archName, String featureDir) =>
+      '''
 # {{project_name.titleCase()}}
 
 A Flutter project generated with [Relax CLI](https://pub.dev/packages/relax_cli).
@@ -263,7 +265,44 @@ export 'di/di.dart';
 export 'theme/app_colors.dart';
 export 'theme/app_theme.dart';
 export 'theme/app_typography.dart';
+export 'cache/cached_storage.dart';
 export '../i18n/slang/translations.g.dart';
+''';
+
+  // ─── Cache ─────────────────────────────────────────────────────
+
+  static const cachedStorage = '''
+import 'package:env/env.dart';
+import 'package:relax_storage/relax_storage.dart';
+
+/// Small abstraction around local secure storage used by the app.
+///
+/// `CachedStorage` centralizes read/write access to cached values so the rest
+/// of the codebase does not depend directly on the storage package. It is
+/// currently used to persist the authentication token in encrypted storage.
+///
+/// Example:
+///
+/// ```dart
+/// final storage = getIt<CachedStorage>();
+///
+/// // Save the token
+/// await storage.setToken('eyJhbGciOiJIUzI1NiIs');
+///
+/// // Read the token
+/// final token = storage.token;
+/// ```
+class CachedStorage {
+
+  CachedStorage(EnvValue env) : box = RelaxStorage(env(Env.encryptionKey));
+
+  final RelaxStorage box;
+
+  Future<void> setToken(String token) =>
+      box.save<String>('TOKENDATASTORAGEKEY', token);
+
+  String? get token => box.read<String>('TOKENDATASTORAGEKEY');
+}
 ''';
 
   // ─── Theme ─────────────────────────────────────────────────────
@@ -445,18 +484,21 @@ abstract final class AppTypography {
 APP_NAME={{project_name.titleCase()}} Dev
 APP_SUFFIX=.dev
 BASE_URL=http://localhost:8080
+ENCRYPTION_KEY=encry1234567890ABCDEF12GHIJK34LMNOP098QRSTUVWXYZabcdefghe567ijklmnAoOpqrstuRTDvwxyz0987654321
 ''';
 
   static const envStaging = '''
 APP_NAME={{project_name.titleCase()}} Stg
 APP_SUFFIX=.stg
 BASE_URL=https://staging.api.example.com
+ENCRYPTION_KEY=encry1234567890ABCDEF12GHIJK34LMNOP098QRSTUVWXYZabcdefghe567ijklmnAoOpqrstuRTDvwxyz0987654321
 ''';
 
   static const envProduction = '''
 APP_NAME={{project_name.titleCase()}}
 APP_SUFFIX=
 BASE_URL=https://api.example.com
+ENCRYPTION_KEY=encry1234567890ABCDEF12GHIJK34LMNOP098QRSTUVWXYZabcdefghe567ijklmnAoOpqrstuRTDvwxyz0987654321
 ''';
 
   // ─── DI setup (get_it) ─────────────────────────────────────────
@@ -464,11 +506,17 @@ BASE_URL=https://api.example.com
   static const diSetup = '''
 import 'package:env/env.dart';
 import 'package:get_it/get_it.dart';
+import 'package:{{project_name.snakeCase()}}/core/cache/cached_storage.dart';
+import 'package:relax_storage/relax_storage.dart';
 
 final getIt = GetIt.instance;
 
-void setUpRegister(EnvValue env) {
+Future<void> setUpRegister(EnvValue env) async {
+  await RelaxStorage.init();
+  final cachedStorage = CachedStorage(env);
+
   getIt.registerSingleton<EnvValue>(env);
+  getIt.registerSingleton<CachedStorage>(cachedStorage);
 
   // Register your repositories and services here, for example:
   // getIt.registerLazySingleton<AuthRepository>(
@@ -548,11 +596,11 @@ Future<void> bootstrap(
 
   Bloc.observer = const AppBlocObserver();
 
-  runZonedGuarded(() {
+  runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     LocaleSettings.useDeviceLocale();
 
-    di.setUpRegister(env);
+    await di.setUpRegister(env);
 
     runApp(builder());
   }, (error, stack) {
@@ -581,11 +629,11 @@ Future<void> bootstrap(
     log(details.exceptionAsString(), stackTrace: details.stack);
   };
 
-  runZonedGuarded(() {
+  runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     LocaleSettings.useDeviceLocale();
 
-    di.setUpRegister(env);
+    await di.setUpRegister(env);
 
     runApp(builder());
   }, (error, stack) {
@@ -615,11 +663,11 @@ Future<void> bootstrap(
     log(details.exceptionAsString(), stackTrace: details.stack);
   };
 
-  runZonedGuarded(() {
+  runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     LocaleSettings.useDeviceLocale();
 
-    di.setUpRegister(env);
+    await di.setUpRegister(env);
 
     runApp(ProviderScope(child: builder()));
   }, (error, stack) {
@@ -648,11 +696,11 @@ Future<void> bootstrap(
     log(details.exceptionAsString(), stackTrace: details.stack);
   };
 
-  runZonedGuarded(() {
+  runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     LocaleSettings.useDeviceLocale();
 
-    di.setUpRegister(env);
+    await di.setUpRegister(env);
 
     runApp(builder());
   }, (error, stack) {

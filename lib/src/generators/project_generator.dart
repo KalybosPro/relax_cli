@@ -44,10 +44,7 @@ class ProjectGenerator {
     // Step 2: write .env files + run env_builder BEFORE mason templates.
     // This ensures packages/env/ exists before pubspec.yaml references it,
     // preventing VS Code from failing on `flutter pub get`.
-    await _generateEnvPackage(
-      projectDir: projectDir,
-      projectName: projectName,
-    );
+    await _generateEnvPackage(projectDir: projectDir, projectName: projectName);
 
     // Step 3: overlay architecture template (pubspec.yaml with env: path: packages/env)
     final files = switch (architecture) {
@@ -97,20 +94,16 @@ class ProjectGenerator {
     final progress = _logger.progress('Running flutter create');
 
     try {
-      final result = await Process.run(
-        'flutter',
-        [
-          'create',
-          '--project-name',
-          projectName,
-          '--description',
-          description,
-          '--org',
-          org,
-          p.join(outputDirectory.path, projectName),
-        ],
-        runInShell: true,
-      );
+      final result = await Process.run('flutter', [
+        'create',
+        '--project-name',
+        projectName,
+        '--description',
+        description,
+        '--org',
+        org,
+        p.join(outputDirectory.path, projectName),
+      ], runInShell: true);
 
       if (result.exitCode == 0) {
         progress.complete('Flutter scaffold created');
@@ -165,16 +158,15 @@ class ProjectGenerator {
     // Write .env files directly (no mason — we need them before templates)
     final envFiles = {
       '.env.development':
-          'APP_NAME=$displayName Dev\nAPP_SUFFIX=.dev\nBASE_URL=http://localhost:8080\n',
+          'APP_NAME=$displayName Dev\nAPP_SUFFIX=.dev\nBASE_URL=http://localhost:8080\nENCRYPTION_KEY=encry1234567890ABCDEF12GHIJK34LMNOP098QRSTUVWXYZabcdefghe567ijklmnAoOpqrstuRTDvwxyz0987654321\n',
       '.env.staging':
-          'APP_NAME=$displayName Stg\nAPP_SUFFIX=.stg\nBASE_URL=https://staging.api.example.com\n',
+          'APP_NAME=$displayName Stg\nAPP_SUFFIX=.stg\nBASE_URL=https://staging.api.example.com\nENCRYPTION_KEY=encry1234567890ABCDEF12GHIJK34LMNOP098QRSTUVWXYZabcdefghe567ijklmnAoOpqrstuRTDvwxyz0987654321\n',
       '.env.production':
-          'APP_NAME=$displayName\nAPP_SUFFIX=\nBASE_URL=https://api.example.com\n',
+          'APP_NAME=$displayName\nAPP_SUFFIX=\nBASE_URL=https://api.example.com\nENCRYPTION_KEY=encry1234567890ABCDEF12GHIJK34LMNOP098QRSTUVWXYZabcdefghe567ijklmnAoOpqrstuRTDvwxyz0987654321\n',
     };
 
     for (final entry in envFiles.entries) {
-      File(p.join(projectDir.path, entry.key))
-          .writeAsStringSync(entry.value);
+      File(p.join(projectDir.path, entry.key)).writeAsStringSync(entry.value);
     }
 
     // Also write a minimal pubspec.yaml so env_builder finds a root project
@@ -188,11 +180,7 @@ class ProjectGenerator {
     try {
       final result = await Process.run(
         'env_builder',
-        [
-          'build',
-          '-e',
-          '.env.development,.env.production,.env.staging',
-        ],
+        ['build', '-e', '.env.development,.env.production,.env.staging'],
         workingDirectory: projectDir.path,
         runInShell: true,
       );
@@ -229,7 +217,9 @@ class ProjectGenerator {
       if (pubGet.exitCode == 0) {
         pubGetProgress.complete('Dependencies resolved');
       } else {
-        pubGetProgress.fail('flutter pub get exited with code ${pubGet.exitCode}');
+        pubGetProgress.fail(
+          'flutter pub get exited with code ${pubGet.exitCode}',
+        );
         _logger.detail('${pubGet.stderr}'.trim());
         return;
       }
@@ -331,11 +321,13 @@ class ProjectGenerator {
         .join(' ');
 
     // ── 1. Rewrite build.gradle.kts ─────────────────────────────
-    buildGradle.writeAsStringSync(_buildGradleContent(
-      namespace: '$org.$projectName',
-      applicationId: '$org.$projectName',
-      displayName: displayName,
-    ));
+    buildGradle.writeAsStringSync(
+      _buildGradleContent(
+        namespace: '$org.$projectName',
+        applicationId: '$org.$projectName',
+        displayName: displayName,
+      ),
+    );
 
     // ── 2. Patch AndroidManifest.xml ────────────────────────────
     final manifest = File(
@@ -375,7 +367,8 @@ class ProjectGenerator {
     required String namespace,
     required String applicationId,
     required String displayName,
-  }) => '''
+  }) =>
+      '''
 import java.util.Properties
 import java.io.FileInputStream
 

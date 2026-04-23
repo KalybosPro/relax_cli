@@ -10,26 +10,62 @@ abstract final class BlocAppTemplate {
 
     // ── Root files ──────────────────────────────────────────────
     TemplateFile(SharedTemplate.p('pubspec.yaml'), _pubspec),
-    TemplateFile(SharedTemplate.p('README.md'), SharedTemplate.readme('Bloc', 'bloc/     → Bloc, Events, States')),
+    TemplateFile(
+      SharedTemplate.p('README.md'),
+      SharedTemplate.readme('Bloc', 'bloc/     → Bloc, Events, States'),
+    ),
 
     // ── lib/ (flavor entry points) ────────────────────────────────
-    TemplateFile(SharedTemplate.p('lib/bootstrap.dart'), SharedTemplate.bootstrap),
-    TemplateFile(SharedTemplate.p('lib/main_development.dart'), SharedTemplate.mainDevelopment),
-    TemplateFile(SharedTemplate.p('lib/main_staging.dart'), SharedTemplate.mainStaging),
-    TemplateFile(SharedTemplate.p('lib/main_production.dart'), SharedTemplate.mainProduction),
-    TemplateFile(SharedTemplate.p('lib/app/app.dart'), SharedTemplate.appBarrel),
+    TemplateFile(
+      SharedTemplate.p('lib/bootstrap.dart'),
+      SharedTemplate.bootstrap,
+    ),
+    TemplateFile(
+      SharedTemplate.p('lib/main_development.dart'),
+      SharedTemplate.mainDevelopment,
+    ),
+    TemplateFile(
+      SharedTemplate.p('lib/main_staging.dart'),
+      SharedTemplate.mainStaging,
+    ),
+    TemplateFile(
+      SharedTemplate.p('lib/main_production.dart'),
+      SharedTemplate.mainProduction,
+    ),
+    TemplateFile(
+      SharedTemplate.p('lib/app/app.dart'),
+      SharedTemplate.appBarrel,
+    ),
     TemplateFile(SharedTemplate.p('lib/app/view/app.dart'), _appView),
 
     // ── lib/features/home/ ──────────────────────────────────────
     TemplateFile(SharedTemplate.p('lib/features/home/home.dart'), _homeBarrel),
-    TemplateFile(SharedTemplate.p('lib/features/home/bloc/home_bloc.dart'), _homeBloc),
-    TemplateFile(SharedTemplate.p('lib/features/home/bloc/home_event.dart'), _homeEvent),
-    TemplateFile(SharedTemplate.p('lib/features/home/bloc/home_state.dart'), _homeState),
-    TemplateFile(SharedTemplate.p('lib/features/home/view/home_page.dart'), _homePage),
-    TemplateFile(SharedTemplate.p('lib/features/home/view/home_view.dart'), _homeView),
+    TemplateFile(
+      SharedTemplate.p('lib/features/home/bloc/home_bloc.dart'),
+      _homeBloc,
+    ),
+    TemplateFile(
+      SharedTemplate.p('lib/features/home/bloc/home_event.dart'),
+      _homeEvent,
+    ),
+    TemplateFile(
+      SharedTemplate.p('lib/features/home/bloc/home_state.dart'),
+      _homeState,
+    ),
+    TemplateFile(
+      SharedTemplate.p('lib/features/home/view/home_page.dart'),
+      _homePage,
+    ),
+    TemplateFile(
+      SharedTemplate.p('lib/features/home/view/home_view.dart'),
+      _homeView,
+    ),
 
     // ── test/ ───────────────────────────────────────────────────
-    TemplateFile(SharedTemplate.p('test/app/view/app_test.dart'), SharedTemplate.appTest),
+    TemplateFile(
+      SharedTemplate.p('test/app/view/app_test.dart'),
+      SharedTemplate.appTest,
+    ),
   ];
 
   static const _pubspec = '''
@@ -54,7 +90,8 @@ dependencies:
   get_it: ^8.0.3
   slang: ^4.14.0
   slang_flutter: ^4.14.0
-  relax_orm: ^0.1.2
+  relax_orm: ^0.1.3
+  relax_storage: ^1.0.1
   env:
     path: packages/env
 
@@ -63,13 +100,11 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   build_runner: ^2.4.0
-  relax_orm_generator: ^0.1.2
+  relax_orm_generator: ^0.1.5
 
 flutter:
   uses-material-design: true
 ''';
-
-
 
   static const _appView = '''
 import 'package:flutter/material.dart';
@@ -182,7 +217,8 @@ class HomePage extends StatelessWidget {
 }
 ''';
 
-  static final _homeView = '''
+  static final _homeView =
+      '''
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

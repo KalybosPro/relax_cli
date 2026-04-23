@@ -97,4 +97,3 @@ Relax CLI, c'est l'outil que j'aurais voulu avoir quand j'ai commencé Flutter.
 Disponible en open source → lien en commentaire.
 
 #Flutter #Dart #ORM #LocalFirst #OpenSource #DevTools #CleanArchitecture
-
