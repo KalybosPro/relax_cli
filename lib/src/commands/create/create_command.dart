@@ -20,7 +20,12 @@ class CreateCommand extends Command<int> {
           for (final arch in Architecture.values) arch.name: arch.label,
         },
       )
-      ..addFlag('org',abbr: 'o',help: '--org com.example')
+      ..addOption(
+        'org',
+        abbr: 'o',
+        help: 'The app package prefix (e.g. com.example).',
+        defaultsTo: 'com.example',
+      )
       ..addOption(
         'description',
         abbr: 'd',
@@ -84,6 +89,7 @@ class CreateCommand extends Command<int> {
     _logger.info('');
 
     final description = argResults?['description'] as String;
+    final org = argResults?['org'] as String;
     final primaryColor = argResults?['primary-color'] as String;
     final font = argResults?['font'] as String;
 
@@ -94,6 +100,7 @@ class CreateCommand extends Command<int> {
         projectName: projectName,
         architecture: architecture,
         outputDirectory: Directory.current,
+        org: org,
         description: description,
         primaryColor: primaryColor,
         fontFamily: font,
@@ -179,7 +186,8 @@ class CreateCommand extends Command<int> {
     return RegExp(r'^[a-z][a-z0-9_]*$').hasMatch(name);
   }
 
-  static const _banner = ' _ __ ___| | __ ___  __\n'
+  static const _banner =
+      ' _ __ ___| | __ ___  __\n'
       "| '__/ _ \\ |/ _` \\ \\/ /\n"
       '| | |  __/ | (_| |>  < \n'
       r'|_|  \___|_|\__,_/_/\_\';

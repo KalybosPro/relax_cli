@@ -140,6 +140,30 @@ void main() {
       }
     });
 
+    test('custom org is used for android application id', () async {
+      final originalDir = Directory.current;
+      Directory.current = tempDir;
+
+      try {
+        await runner.run([
+          'create',
+          'org_app',
+          '-a',
+          'bloc',
+          '-o',
+          'dev.acme',
+        ]);
+
+        final buildGradle = File(
+          '${tempDir.path}/org_app/android/app/build.gradle.kts',
+        ).readAsStringSync();
+        expect(buildGradle, contains('namespace = "dev.acme.org_app"'));
+        expect(buildGradle, contains('applicationId = "dev.acme.org_app"'));
+      } finally {
+        Directory.current = originalDir;
+      }
+    });
+
     for (final arch in ['provider', 'riverpod', 'getx']) {
       test('generates $arch project successfully', () async {
         final originalDir = Directory.current;
