@@ -1,3 +1,10 @@
+## 0.1.5
+
+- **Added** shared encrypted local storage scaffolding via `relax_storage`, including a generated `CachedStorage` service in the app core.
+- **Added** `ENCRYPTION_KEY` to generated flavor environment files and wired it into `RelaxStorage` initialization.
+- **Updated** generated project dependencies to `relax_orm ^0.1.4`, `relax_orm_generator ^0.1.6`, and `relax_storage ^1.0.1`.
+- **Fixed** generated DI and bootstrap templates so Bloc, Provider, Riverpod, and GetX projects initialize storage consistently and import the cache helper from the correct package path.
+
 ## 0.1.4
 
 - **Added** shared encrypted local storage scaffolding via `relax_storage`, including a generated `CachedStorage` service in the app core.

@@ -66,7 +66,7 @@ publish_to: 'none'
 version: 1.0.0
 
 environment:
-  sdk: ^3.10.7
+  sdk: ">=3.11.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -78,7 +78,7 @@ dependencies:
   get_it: ^8.0.3
   slang: ^4.14.0
   slang_flutter: ^4.14.0
-  relax_orm: ^0.1.3
+  relax_orm: ^0.1.4
   relax_storage: ^1.0.1
   env:
     path: packages/env
@@ -88,7 +88,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   build_runner: ^2.4.0
-  relax_orm_generator: ^0.1.5
+  relax_orm_generator: ^0.1.6
 
 flutter:
   uses-material-design: true
